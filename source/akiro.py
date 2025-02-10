@@ -1,0 +1,164 @@
+import argparse
+import os
+import platform
+import shutil
+import subprocess
+import tempfile
+import yaml
+from conan.api.conan_api import ConanAPI
+from conan.cli.cli import Cli
+from conan.cli.exit_codes import SUCCESS, ERROR_MIGRATION, ERROR_GENERAL, USER_CTRL_C, ERROR_SIGTERM, USER_CTRL_BREAK, ERROR_INVALID_CONFIGURATION, ERROR_UNEXPECTED
+from jinja2 import Template
+from sys import prefix
+
+def parse(template):
+    with open(template, "r") as file:
+        yaml_template = file.read()
+    
+    context = {"os": platform.system().lower()}
+    
+    template = Template(yaml_template)
+    
+    return yaml.safe_load(template.render(context))
+
+def generate_requirements(packages):
+    requirements = []
+    
+    for package, versions in packages['packages'].items():
+        for version, configs in versions.items():
+            if configs is None:
+                requirement = [f"--requires={package}/{version}"]
+                requirements.append(requirement)
+            else:
+                for config in configs:
+                    settings = []
+                    options = []
+    
+                    if 'settings' in config:
+                        for setting in config['settings']:
+                            safe_setting = setting.strip()
+                            
+                            if (len(safe_setting) > 0):
+                                settings.append('-s')
+                                settings.append(safe_setting)
+    
+                    if 'options' in config:
+                        for option in config['options']:
+                            safe_option = option.strip()
+                            
+                            if (len(safe_option) > 0):
+                                options.append('-o')
+                                options.append(safe_option)
+                    
+                    requirement = [f"--requires={package}/{version}"]
+                    requirement += settings
+                    requirement += options
+                    
+                    requirements.append(requirement)
+    
+    return requirements
+
+def generate_commands(build_type, profile, packages):
+    commands = []
+    
+    prefix = ['install', '-pr:a', f"{profile}", '--build=missing', '-s', f"build_type={build_type}"]
+    
+    for requirement in generate_requirements(packages):
+        command = []
+        command += prefix
+        command += requirement
+        
+        commands.append(command)
+
+    return commands
+
+def serialize_command(command):
+    rv = "conan"
+    
+    for arg in command:
+        rv += f" {arg}"
+        
+    return rv
+
+def conan_main(args):
+    print(f"EXECUTE: {serialize_command(args)}", flush=True)
+    
+    try:
+        conan_api = ConanAPI()
+    except ConanMigrationError:  # Error migrating
+        sys.exit(ERROR_MIGRATION)
+    except ConanException as e:
+        sys.stderr.write("Error in Conan initialization: {}".format(e))
+        sys.exit(ERROR_GENERAL)
+
+    cli = Cli(conan_api)
+    error = SUCCESS
+    try:
+        cli.run(args)
+    except BaseException as e:
+        error = cli.exception_exit_error(e)
+
+    return error
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    parser.add_argument('-b', '--build_type', default='Release')
+    parser.add_argument('-p', '--profile', default='default')
+    parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--generate-built-list', action='store_true')
+    parser.add_argument('--parse-only', action='store_true')
+    args = parser.parse_args()
+    
+    packages = parse(args.filename);
+    
+    if args.parse_only:
+        print(packages)
+    else:
+        commands = generate_commands(args.build_type, args.profile, packages)
+
+        if args.dry_run:
+            for command in commands:
+                print(serialize_command(command))
+        elif args.generate_built_list:
+            first_command = True
+            final_built_file = 'built.json'
+            
+            for command in commands:
+                graph_file = tempfile.NamedTemporaryFile()
+                graph_file_name = graph_file.name
+                built_file = tempfile.NamedTemporaryFile()
+                built_file_name = built_file.name
+                merge_file = tempfile.NamedTemporaryFile()
+                merge_file_name = merge_file.name
+                
+                try:
+                    graph_file.close()
+                    built_file.close()
+                    merge_file.close()
+                    
+                    extended_command = []
+                    extended_command += command
+                    extended_command += ['--format=json', f"--out-file={graph_file_name}"]
+                    conan_main(extended_command)
+                    
+                    list_built_command = ["list", f"--graph={graph_file.name}", "--graph-binaries=build", "--format=json", f"--out-file={built_file_name}"]
+                    conan_main(list_built_command)
+                    
+                    if first_command:
+                        shutil.copy(built_file_name, final_built_file)
+                        first_command = False
+                    else:
+                        shutil.copy(final_built_file, merge_file_name)
+                        merge_list_command = ["pkglist", "merge", f"--list={merge_file_name}", f"--list={built_file_name}", "--format=json", f"--out-file={final_built_file}"]
+                        conan_main(merge_list_command)
+                        
+                finally:
+                    os.remove(graph_file_name)
+                    os.remove(built_file_name)
+                    
+                    if os.path.exists(merge_file_name):
+                        os.remove(merge_file_name)
+        else:
+            for command in commands:
+                conan_main(command)

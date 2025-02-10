@@ -1,0 +1,93 @@
+packages:
+   "zlib":
+      "1.3.1":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "zlib/*:shared=True"
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=static{% endif %}"
+           options:
+               - "zlib/*:shared=False"
+   "openssl":
+      "3.4.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "zlib/*:shared=True"
+               - "openssl/*:shared=True"
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=static{% endif %}"
+           options:
+               - "zlib/*:shared=False"
+               - "openssl/*:shared=False"
+   "libcurl":
+      "8.11.1":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "zlib/*:shared=True"
+               - "openssl/*:shared=True"
+               - "libcurl/*:shared=True"
+   "boost":
+      "1.86.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "zlib/*:shared=True"
+               - "boost/*:shared=False"
+         {% if os == 'windows' %}
+         - settings:
+               - "compiler.runtime=static"
+           options:
+               - "zlib/*:shared=False"
+               - "boost/*:shared=False"
+          {% endif %}
+   "icu":
+      "76.1":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "icu/*:shared=True"
+               - "{% if os == 'linux' %}icu/*:data_packaging=library{% endif %}"
+   "onetbb":
+      "2021.12.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+         {% if os == 'windows' %}
+         - settings:
+               - "compiler.runtime=static"
+          {% endif %}
+   "rapidjson":
+      "cci.20230929":
+   "pugixml":
+      "1.14":
+   "libvault":
+      "0.59.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "libvault/*:shared=True"
+   "librdkafka":
+      "2.8.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "zlib/*:shared=True"
+               - "openssl/*:shared=True"
+               - "libcurl/*:shared=True"
+               - "lz4/*:shared=True"
+               - "librdkafka/*:curl=True"
+               - "librdkafka/*:shared=True"
+               - "librdkafka/*:ssl=True"
+               - "librdkafka/*:zlib=True"
+   "modern-cpp-kafka":
+      "2024.07.03":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+   "gtest":
+      "1.15.0":
+         - settings:
+               - "{% if os == 'windows' %}compiler.runtime=dynamic{% endif %}"
+           options:
+               - "gtest/*:shared=False"
