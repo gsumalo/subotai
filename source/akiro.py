@@ -101,13 +101,16 @@ def conan_main(args):
     return error
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
+    parser = argparse.ArgumentParser(description='Package generator for Conan recipes based on YAML+Jinja2 specification',
+                                     epilog="Akiro is the name of the wizard who invoked gods to bring Conan back to life.\n"
+                                            "Subotai is the archer and thief who recovered Conan from the Tree of Woe.\n"
+                                            "Both were more than wingmen of Conan and help him to achieve Crom's recognition")
+    parser.add_argument('filename', nargs='?', default='subotai.yaml', help='file with the specification of packages (default: %(default)s)')
     parser.add_argument('-b', '--build_type', default='Release')
     parser.add_argument('-p', '--profile', default='default')
-    parser.add_argument('--dry-run', action='store_true')
-    parser.add_argument('--generate-built-list', action='store_true')
-    parser.add_argument('--parse-only', action='store_true')
+    parser.add_argument('--dry-run', action='store_true', help='print the list of generated commands and exit')
+    parser.add_argument('--generate-built-list', action='store_true', help='generate JSON file with the list of the built packages')
+    parser.add_argument('--parse-only', action='store_true', help='check the syntax of the specification file and exit')
     args = parser.parse_args()
     
     packages = parse(args.filename);
