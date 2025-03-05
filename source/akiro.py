@@ -11,11 +11,14 @@ from conan.cli.exit_codes import SUCCESS, ERROR_MIGRATION, ERROR_GENERAL, USER_C
 from jinja2 import Template
 from sys import prefix
 
-def parse(template):
+def parse(template, build_type):
     with open(template, "r") as file:
         yaml_template = file.read()
     
-    context = {"os": platform.system().lower()}
+    context = {
+        "os": platform.system().lower(),
+        "build_type": build_type,
+    }
     
     template = Template(yaml_template)
     
@@ -113,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('--parse-only', action='store_true', help='check the syntax of the specification file and exit')
     args = parser.parse_args()
     
-    packages = parse(args.filename);
+    packages = parse(args.filename, args.build_type);
     
     if args.parse_only:
         print(packages)
