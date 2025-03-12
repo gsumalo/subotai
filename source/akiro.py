@@ -35,6 +35,7 @@ def generate_requirements(packages):
             else:
                 for config in configs:
                     settings = []
+                    build_options = []
                     options = []
     
                     if 'settings' in config:
@@ -45,6 +46,14 @@ def generate_requirements(packages):
                                 settings.append('-s')
                                 settings.append(safe_setting)
     
+                    if 'build_options' in config:
+                        for build_option in config['build_options']:
+                            safe_build_option = build_option.strip()
+                            
+                            if (len(safe_build_option) > 0):
+                                build_options.append('-o:b')
+                                build_options.append(safe_build_option)
+
                     if 'options' in config:
                         for option in config['options']:
                             safe_option = option.strip()
@@ -56,6 +65,7 @@ def generate_requirements(packages):
                     requirement = [f"--requires={package}/{version}"]
                     requirement += settings
                     requirement += options
+                    requirement += build_options
                     
                     requirements.append(requirement)
     
