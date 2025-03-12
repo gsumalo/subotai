@@ -1,5 +1,6 @@
 packages:
    "msys2":
       "cci.latest":
-         - build_options:
-               - "msys2/*:gpg_dirmngr_honor_http_proxy=True"
+         - scope: "build"
+           options:
+            - "msys2/*:gpg_dirmngr_honor_http_proxy=True"

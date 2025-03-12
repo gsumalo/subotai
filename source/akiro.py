@@ -25,6 +25,12 @@ def parse(template, build_type):
     return yaml.safe_load(template.render(context))
 
 def generate_requirements(packages):
+    scopes = {
+        "all": "a",
+        "build": "b",
+        "host": "h"
+    }
+    
     requirements = []
     
     for package, versions in packages['packages'].items():
@@ -34,38 +40,32 @@ def generate_requirements(packages):
                 requirements.append(requirement)
             else:
                 for config in configs:
+                    scope = scopes['all']
                     settings = []
-                    build_options = []
                     options = []
-    
+                    
+                    if 'scope' in config:
+                        scope = scopes[config['scope'].strip()]
+                    
                     if 'settings' in config:
                         for setting in config['settings']:
                             safe_setting = setting.strip()
                             
                             if (len(safe_setting) > 0):
-                                settings.append('-s')
+                                settings.append(f"-s:{scope}")
                                 settings.append(safe_setting)
-    
-                    if 'build_options' in config:
-                        for build_option in config['build_options']:
-                            safe_build_option = build_option.strip()
-                            
-                            if (len(safe_build_option) > 0):
-                                build_options.append('-o:b')
-                                build_options.append(safe_build_option)
-
+                    
                     if 'options' in config:
                         for option in config['options']:
                             safe_option = option.strip()
                             
                             if (len(safe_option) > 0):
-                                options.append('-o')
+                                options.append(f"-o:{scope}")
                                 options.append(safe_option)
                     
                     requirement = [f"--requires={package}/{version}"]
                     requirement += settings
                     requirement += options
-                    requirement += build_options
                     
                     requirements.append(requirement)
     
