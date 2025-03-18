@@ -93,7 +93,7 @@ def generate_requirements(packages):
 def generate_commands(build_type, profile, packages):
     commands = []
     
-    prefix = ['install', '-pr:a', f"{profile}", '--build=missing', '-s', f"build_type={build_type}"]
+    prefix = ['install', '-pr:a', f"{profile}", '--update', '--build=missing', '-s', f"build_type={build_type}"]
     
     for requirement in generate_requirements(packages):
         command = []
