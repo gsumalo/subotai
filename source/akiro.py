@@ -42,6 +42,7 @@ def generate_requirements(packages):
                 for config in configs:
                     scope = scopes['all']
                     settings = []
+                    configurations = []
                     options = []
                     tools = []
                     
@@ -55,6 +56,14 @@ def generate_requirements(packages):
                             if (len(safe_setting) > 0):
                                 settings.append(f"-s:{scope}")
                                 settings.append(safe_setting)
+
+                    if 'configurations' in config:
+                        for configuration in config['configurations']:
+                            safe_conf = configuration.strip()
+                            
+                            if (len(safe_conf) > 0):
+                                configurations.append(f"-c:{scope}")
+                                configurations.append(safe_conf)
                     
                     if 'options' in config:
                         for option in config['options']:
@@ -73,6 +82,7 @@ def generate_requirements(packages):
                     
                     requirement = [f"--requires={package}/{version}"]
                     requirement += settings
+                    requirement += configurations
                     requirement += options
                     requirement += tools
                     
