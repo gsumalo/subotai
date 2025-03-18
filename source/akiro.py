@@ -130,7 +130,8 @@ def conan_main(args):
     except BaseException as e:
         error = cli.exception_exit_error(e)
 
-    return error
+    if error != SUCCESS:
+        raise Exception(error)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Package generator for Conan recipes based on YAML+Jinja2 specification',
