@@ -44,7 +44,6 @@ def generate_requirements(packages):
                     settings = []
                     configurations = []
                     options = []
-                    tools = []
                     
                     if 'scope' in config:
                         scope = scopes[config['scope'].strip()]
@@ -73,18 +72,10 @@ def generate_requirements(packages):
                                 options.append(f"-o:{scope}")
                                 options.append(safe_option)
                     
-                    if 'tool_requires' in config:
-                        for tool in config['tool_requires']:
-                            safe_tool = tool.strip()
-                            
-                            if (len(safe_tool) > 0):
-                                tools.append(f"--tool-requires={safe_tool}")
-                    
                     requirement = [f"--requires={package}/{version}"]
                     requirement += settings
                     requirement += configurations
                     requirement += options
-                    requirement += tools
                     
                     requirements.append(requirement)
     
@@ -93,7 +84,7 @@ def generate_requirements(packages):
 def generate_commands(build_type, profile, packages):
     commands = []
     
-    prefix = ['install', '-pr:a', f"{profile}", '--update', '--build=missing', '-s', f"build_type={build_type}"]
+    prefix = ['install', '-pr:a', f"{profile}", '--build=missing', '-s', f"build_type={build_type}"]
     
     for requirement in generate_requirements(packages):
         command = []
